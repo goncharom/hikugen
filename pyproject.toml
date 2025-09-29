@@ -1,0 +1,13 @@
+[project]
+name = "hikugen"
+version = "0.2.1"
+description = "AI-powered web scraping library that generates Python code to extract structured data into Pydantic schemas"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.13.5",
+    "pydantic>=2.11.9",
+    "pytest>=8.4.2",
+    "requests>=2.32.5",
+    "ruff>=0.13.2",
+]
