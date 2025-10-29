@@ -678,3 +678,113 @@ class TestExtractFromHtml:
 
         assert result.title == "Success"
         assert mock_generator.regenerate_code.call_count == 1
+
+
+class TestCacheClearingAPI:
+    """Test cache clearing API methods."""
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_all_cache_delegates_to_database(self, mock_gen_class, mock_db_class):
+        """Test clear_all_cache() delegates to database method."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_all_cache.return_value = 5
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_all_cache()
+
+        mock_db.clear_all_cache.assert_called_once()
+        assert count == 5
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_all_cache_returns_count(self, mock_gen_class, mock_db_class):
+        """Test clear_all_cache() returns deletion count."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_all_cache.return_value = 10
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_all_cache()
+
+        assert count == 10
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_cache_for_key_delegates_to_database(self, mock_gen_class, mock_db_class):
+        """Test clear_cache_for_key() delegates to database method."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_cache_for_key.return_value = 3
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_cache_for_key("test_key")
+
+        mock_db.clear_cache_for_key.assert_called_once_with("test_key")
+        assert count == 3
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_cache_for_key_returns_count(self, mock_gen_class, mock_db_class):
+        """Test clear_cache_for_key() returns deletion count."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_cache_for_key.return_value = 2
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_cache_for_key("my_cache_key")
+
+        assert count == 2
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_cache_for_key_with_url(self, mock_gen_class, mock_db_class):
+        """Test clear_cache_for_key() works with URL cache keys."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_cache_for_key.return_value = 1
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_cache_for_key("https://example.com")
+
+        mock_db.clear_cache_for_key.assert_called_once_with("https://example.com")
+        assert count == 1
+
+    @patch("hikugen.extractor.HikuDatabase")
+    @patch("hikugen.extractor.HikuCodeGenerator")
+    def test_clear_cache_for_key_with_custom_key(self, mock_gen_class, mock_db_class):
+        """Test clear_cache_for_key() works with custom task-name keys."""
+        from hikugen.extractor import HikuExtractor
+
+        mock_db = Mock()
+        mock_db.clear_cache_for_key.return_value = 2
+        mock_db_class.return_value = mock_db
+
+        mock_gen_class.return_value = Mock()
+
+        extractor = HikuExtractor(api_key="test-key")
+        count = extractor.clear_cache_for_key("amazon_products_scraper")
+
+        mock_db.clear_cache_for_key.assert_called_once_with("amazon_products_scraper")
+        assert count == 2

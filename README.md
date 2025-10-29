@@ -90,6 +90,22 @@ for article in result.articles:
     print(f"{article.title} by {article.author}")
 ```
 
+### Cache Management
+
+Clear cached extraction code when page structures change or during testing:
+
+```python
+# Clear cache for a specific URL or task
+count = extractor.clear_cache_for_key("https://example.com/articles")
+print(f"Deleted {count} cache entries")
+
+# Clear all cached extraction code
+total = extractor.clear_all_cache()
+print(f"Deleted {total} total cache entries")
+```
+
+Use `clear_cache_for_key()` when page structure changes, or `clear_all_cache()` during development to reset cache state.
+
 ### Parameters
 
 - **url** - URL to extract from

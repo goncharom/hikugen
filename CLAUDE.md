@@ -247,6 +247,38 @@ Common to both methods:
    - **Non-blocking**: Failures trigger regeneration but don't block on LLM API errors
    - **Graceful degradation**: LLM API failures are logged as warnings, extraction continues
 
+### Cache Management
+
+Clear cached extraction code when page structures change or during development:
+
+```python
+extractor = HikuExtractor(api_key="your-openrouter-key")
+
+# Clear cache for a specific URL or task name
+count = extractor.clear_cache_for_key("https://example.com")
+print(f"Deleted {count} cache entries")
+
+# Clear all cached extraction code
+total = extractor.clear_all_cache()
+print(f"Deleted {total} total cache entries")
+```
+
+**Methods:**
+- **`clear_cache_for_key(cache_key: str) -> int`**: Clear all cached code for a specific cache_key (URL, task name, etc.)
+  - Returns number of entries deleted
+  - Removes all schema variants for the given cache_key
+  - Useful when page structure changes or schema is updated
+
+- **`clear_all_cache() -> int`**: Clear all cached extraction code
+  - Returns total number of entries deleted
+  - Use during development/testing to reset cache state
+
+**Use cases:**
+- Page structure changed: Clear specific URL/task cache to force regeneration
+- Schema updated: Clear cache to regenerate code with new schema
+- Development: Clear all cache to test full generation workflow
+- Debugging: Clear cache to isolate generation logic
+
 ## Common Development Tasks
 
 ### Adding a New Feature

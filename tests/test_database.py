@@ -226,3 +226,130 @@ class TestGenericCacheKeys:
         assert cached_code is not None
         assert cached_code["cache_key"] == url_cache_key
         assert cached_code["extraction_code"] == sample_extraction_code
+
+
+class TestCacheClearingOperations:
+    """Test cache clearing operations."""
+
+    def test_clear_all_cache_empty_database(self, temp_db):
+        """Test that clearing empty database returns 0."""
+        temp_db.create_tables()
+        count = temp_db.clear_all_cache()
+        assert count == 0
+
+    def test_clear_all_cache_removes_all_entries(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test that clearing all cache removes all entries."""
+        temp_db.create_tables()
+
+        # Save multiple entries
+        temp_db.save_extraction_code("key1", sample_pydantic_schema, sample_extraction_code)
+        temp_db.save_extraction_code("key2", sample_pydantic_schema, sample_extraction_code)
+
+        # Verify entries exist
+        assert temp_db.get_cached_code("key1", sample_pydantic_schema) is not None
+        assert temp_db.get_cached_code("key2", sample_pydantic_schema) is not None
+
+        # Clear all cache
+        count = temp_db.clear_all_cache()
+        assert count == 2
+
+        # Verify entries are deleted
+        assert temp_db.get_cached_code("key1", sample_pydantic_schema) is None
+        assert temp_db.get_cached_code("key2", sample_pydantic_schema) is None
+
+    def test_clear_all_cache_returns_correct_count(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test that clearing all cache returns accurate deletion count."""
+        temp_db.create_tables()
+
+        # Save 5 entries
+        for i in range(5):
+            temp_db.save_extraction_code(f"key{i}", sample_pydantic_schema, sample_extraction_code)
+
+        count = temp_db.clear_all_cache()
+        assert count == 5
+
+    def test_clear_cache_for_key_single_schema(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test clearing cache key with single schema variant."""
+        temp_db.create_tables()
+
+        cache_key = "https://example.com"
+        temp_db.save_extraction_code(cache_key, sample_pydantic_schema, sample_extraction_code)
+
+        # Verify entry exists
+        assert temp_db.get_cached_code(cache_key, sample_pydantic_schema) is not None
+
+        # Clear specific key
+        count = temp_db.clear_cache_for_key(cache_key)
+        assert count == 1
+
+        # Verify entry is deleted
+        assert temp_db.get_cached_code(cache_key, sample_pydantic_schema) is None
+
+    def test_clear_cache_for_key_multiple_schemas(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test clearing cache key with multiple schema variants."""
+        temp_db.create_tables()
+
+        cache_key = "https://example.com"
+        schema2 = "class Model2(BaseModel): field: int"
+
+        # Save same cache_key with different schemas
+        temp_db.save_extraction_code(cache_key, sample_pydantic_schema, sample_extraction_code)
+        temp_db.save_extraction_code(cache_key, schema2, sample_extraction_code)
+
+        # Verify both entries exist
+        assert temp_db.get_cached_code(cache_key, sample_pydantic_schema) is not None
+        assert temp_db.get_cached_code(cache_key, schema2) is not None
+
+        # Clear specific key (should delete all variants)
+        count = temp_db.clear_cache_for_key(cache_key)
+        assert count == 2
+
+        # Verify both entries are deleted
+        assert temp_db.get_cached_code(cache_key, sample_pydantic_schema) is None
+        assert temp_db.get_cached_code(cache_key, schema2) is None
+
+    def test_clear_cache_for_key_nonexistent(self, temp_db):
+        """Test clearing non-existent cache key returns 0."""
+        temp_db.create_tables()
+        count = temp_db.clear_cache_for_key("nonexistent_key")
+        assert count == 0
+
+    def test_clear_cache_for_key_preserves_others(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test that clearing specific key preserves other keys."""
+        temp_db.create_tables()
+
+        # Save entries with different keys
+        temp_db.save_extraction_code("key1", sample_pydantic_schema, sample_extraction_code)
+        temp_db.save_extraction_code("key2", sample_pydantic_schema, sample_extraction_code)
+        temp_db.save_extraction_code("key3", sample_pydantic_schema, sample_extraction_code)
+
+        # Clear key2
+        count = temp_db.clear_cache_for_key("key2")
+        assert count == 1
+
+        # Verify key1 and key3 still exist
+        assert temp_db.get_cached_code("key1", sample_pydantic_schema) is not None
+        assert temp_db.get_cached_code("key2", sample_pydantic_schema) is None
+        assert temp_db.get_cached_code("key3", sample_pydantic_schema) is not None
+
+    def test_clear_cache_for_key_url_style(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test clearing cache with URL-style cache keys."""
+        temp_db.create_tables()
+
+        url_key = "https://example.com/page"
+        temp_db.save_extraction_code(url_key, sample_pydantic_schema, sample_extraction_code)
+
+        count = temp_db.clear_cache_for_key(url_key)
+        assert count == 1
+        assert temp_db.get_cached_code(url_key, sample_pydantic_schema) is None
+
+    def test_clear_cache_for_key_task_style(self, temp_db, sample_pydantic_schema, sample_extraction_code):
+        """Test clearing cache with task-name style cache keys."""
+        temp_db.create_tables()
+
+        task_key = "amazon_scraper_task"
+        temp_db.save_extraction_code(task_key, sample_pydantic_schema, sample_extraction_code)
+
+        count = temp_db.clear_cache_for_key(task_key)
+        assert count == 1
+        assert temp_db.get_cached_code(task_key, sample_pydantic_schema) is None

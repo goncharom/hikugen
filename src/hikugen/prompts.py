@@ -168,7 +168,9 @@ Extracted data:
 Check for missing fields, type mismatches, invalid formats, and schema compliance issues. Return your analysis in the specified JSON format."""
 
 
-def format_generation_prompt(url: str, html_sample: str, schema: str) -> tuple[str, str]:
+def format_generation_prompt(
+    url: str, html_sample: str, schema: str
+) -> tuple[str, str]:
     """Format generation prompt with provided data.
 
     Args:
@@ -180,9 +182,7 @@ def format_generation_prompt(url: str, html_sample: str, schema: str) -> tuple[s
         Tuple of (system_prompt, user_prompt)
     """
     user_prompt = GENERATION_USER_PROMPT.format(
-        url=url,
-        html_sample=html_sample,
-        schema=schema
+        url=url, html_sample=html_sample, schema=schema
     )
     return GENERATION_SYSTEM_PROMPT, user_prompt
 
@@ -207,7 +207,7 @@ def format_regeneration_prompt(
         html_sample=html_sample,
         schema=schema,
         error_message=error_message,
-        old_code=old_code
+        old_code=old_code,
     )
     return REGENERATION_SYSTEM_PROMPT, user_prompt
 
@@ -223,7 +223,6 @@ def format_quality_check_prompt(extracted_data: str, schema: str) -> tuple[str, 
         Tuple of (system_prompt, user_prompt)
     """
     user_prompt = QUALITY_CHECK_USER_PROMPT.format(
-        extracted_data=extracted_data,
-        schema=schema
+        extracted_data=extracted_data, schema=schema
     )
     return QUALITY_CHECK_SYSTEM_PROMPT, user_prompt

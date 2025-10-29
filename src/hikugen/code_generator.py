@@ -200,8 +200,7 @@ class HikuCodeGenerator:
 
             # Get prompts
             system_prompt, user_prompt = format_quality_check_prompt(
-                extracted_data=result_json,
-                schema=schema
+                extracted_data=result_json, schema=schema
             )
 
             # Call LLM

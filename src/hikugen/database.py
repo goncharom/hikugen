@@ -65,7 +65,7 @@ class HikuDatabase:
         """
         # Normalize schema by removing extra whitespace for consistent hashing
         normalized_schema = " ".join(pydantic_schema.split())
-        return hashlib.sha256(normalized_schema.encode('utf-8')).hexdigest()
+        return hashlib.sha256(normalized_schema.encode("utf-8")).hexdigest()
 
     def generate_cache_key(self, name: str, pydantic_schema: str) -> str:
         """Generate cache key combining name and schema hash.
@@ -80,7 +80,9 @@ class HikuDatabase:
         schema_hash = self.generate_schema_hash(pydantic_schema)
         return f"{name}:{schema_hash}"
 
-    def save_extraction_code(self, cache_key: str, pydantic_schema: str, extraction_code: str):
+    def save_extraction_code(
+        self, cache_key: str, pydantic_schema: str, extraction_code: str
+    ):
         """Save or update extraction code for cache_key and schema combination.
 
         Args:
@@ -100,7 +102,9 @@ class HikuDatabase:
 
         self.connection.commit()
 
-    def get_cached_code(self, cache_key: str, pydantic_schema: str) -> Optional[Dict[str, Any]]:
+    def get_cached_code(
+        self, cache_key: str, pydantic_schema: str
+    ) -> Optional[Dict[str, Any]]:
         """Get cached extraction code for cache_key and schema combination.
 
         Args:
@@ -120,7 +124,9 @@ class HikuDatabase:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-    def update_last_successful_run(self, cache_key: str, pydantic_schema: str, timestamp: datetime):
+    def update_last_successful_run(
+        self, cache_key: str, pydantic_schema: str, timestamp: datetime
+    ):
         """Update last successful run timestamp for cache_key and schema combination.
 
         Args:
@@ -148,3 +154,40 @@ class HikuDatabase:
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM extraction_cache")
         return [dict(row) for row in cursor.fetchall()]
+
+    def clear_all_cache(self) -> int:
+        """Delete all cached extraction code entries.
+
+        Returns:
+            Number of entries deleted
+        """
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM extraction_cache")
+        count = cursor.fetchone()[0]
+        cursor.execute("DELETE FROM extraction_cache")
+        self.connection.commit()
+        return count
+
+    def clear_cache_for_key(self, cache_key: str) -> int:
+        """Delete all cached extraction code for a specific cache_key.
+
+        Clears all schema variants for the given cache_key.
+
+        Args:
+            cache_key: Cache identifier to clear (URL, task name, etc.)
+
+        Returns:
+            Number of entries deleted
+        """
+        cursor = self.connection.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM extraction_cache WHERE cache_key = ?",
+            (cache_key,),
+        )
+        count = cursor.fetchone()[0]
+        cursor.execute(
+            "DELETE FROM extraction_cache WHERE cache_key = ?",
+            (cache_key,),
+        )
+        self.connection.commit()
+        return count

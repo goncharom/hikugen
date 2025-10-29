@@ -2,12 +2,12 @@
 # ABOUTME: AST-based validation for imports, function signatures, and security restrictions
 
 import ast
-import re
 import sys
 from typing import Optional, Set
 
 # Pydantic extraction code validation constants
 ALLOWED_THIRD_PARTY = {"requests", "bs4", "beautifulsoup4"}
+
 
 def validate_code_complete(
     code: str, allowed_third_party: Optional[Set[str]] = ALLOWED_THIRD_PARTY

@@ -206,7 +206,10 @@ class HikuExtractor:
         # Step 2: Execute with regeneration loop
         for attempt in range(max_regenerate_attempts + 1):
             logger.debug(
-                "Attempt %d/%d for %s", attempt + 1, max_regenerate_attempts + 1, cache_key
+                "Attempt %d/%d for %s",
+                attempt + 1,
+                max_regenerate_attempts + 1,
+                cache_key,
             )
 
             result, success, error_msg = self._try_code(
@@ -225,11 +228,15 @@ class HikuExtractor:
                         cache_key, schema_json, extraction_code
                     )
                     logger.info(
-                        "Success after %d regeneration attempts for %s", attempt, cache_key
+                        "Success after %d regeneration attempts for %s",
+                        attempt,
+                        cache_key,
                     )
                 return result
 
-            logger.warning("Attempt %d failed for %s: %s", attempt + 1, cache_key, error_msg)
+            logger.warning(
+                "Attempt %d failed for %s: %s", attempt + 1, cache_key, error_msg
+            )
 
             if attempt >= max_regenerate_attempts:
                 raise RuntimeError(
@@ -259,7 +266,9 @@ class HikuExtractor:
             is_fresh = True
 
         # Should never reach here - loop should return or raise
-        raise RuntimeError(f"Extraction failed after exhausting all attempts for {cache_key}")
+        raise RuntimeError(
+            f"Extraction failed after exhausting all attempts for {cache_key}"
+        )
 
     def _try_code(
         self,
@@ -295,8 +304,8 @@ class HikuExtractor:
 
             if is_fresh and validate_quality:
                 logger.debug("Running LLM quality check")
-                quality_ok, quality_issues = self.code_generator.check_data_quality_with_llm(
-                    result, schema_json
+                quality_ok, quality_issues = (
+                    self.code_generator.check_data_quality_with_llm(result, schema_json)
                 )
 
                 if not quality_ok and quality_issues:
@@ -310,3 +319,31 @@ class HikuExtractor:
             error_msg = f"{type(e).__name__}: {str(e)}"
             logger.debug("Code execution failed: %s", error_msg)
             return None, False, error_msg
+
+    def clear_all_cache(self) -> int:
+        """Clear all cached extraction code.
+
+        Returns:
+            Number of cache entries deleted
+        """
+        return self.database.clear_all_cache()
+
+    def clear_cache_for_key(self, cache_key: str) -> int:
+        """Clear cached extraction code for a specific cache key.
+
+        Removes all cached code for the given cache_key across all schemas.
+
+        Args:
+            cache_key: Cache identifier (URL, task name, etc.)
+
+        Returns:
+            Number of cache entries deleted
+
+        Example:
+            extractor = HikuExtractor(api_key="key")
+            # Clear cache for specific URL
+            count = extractor.clear_cache_for_key("https://example.com")
+            # Clear cache for task name
+            count = extractor.clear_cache_for_key("amazon-search")
+        """
+        return self.database.clear_cache_for_key(cache_key)
